@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Login — Admin</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <script src="https://unpkg.com/@phosphor-icons/web"></script>
+
+  <link rel="stylesheet" href="src/assets/css/style.css" />
+</head>
+<body>
+
+  <div class="login-wrapper">
+    <div class="login-card">
+      
+      <div class="login-header" style="text-align:center; border:none; padding:0; margin-bottom:28px;">
+        <img class="login-logo" src="merge.png" alt="Coffee Cafe logo" />
+        <p style="font-size:18px; font-weight:600; color:var(--text);">Login to your account</p>
+      </div>
+
+      <!-- Form -->
+      <form class="login-form" onsubmit="handleLogin(event)">
+        
+        <div class="input-group">
+          <label for="email">Email address</label>
+          <div class="input-field" id="email-field">
+            <i class="ph ph-envelope"></i>
+            <input type="email" id="email" placeholder="name@gmail.com" required autocomplete="email" />
+          </div>
+          <span class="error-msg"><i class="ph ph-warning-circle"></i> Please enter a valid email</span>
+        </div>
+
+        <div class="input-group">
+          <label for="password">Password</label>
+          <div class="input-field" id="password-field">
+            <i class="ph ph-lock"></i>
+            <input type="password" id="password" placeholder="Enter your password" required autocomplete="current-password" />
+            <button type="button" class="toggle-password" onclick="togglePassword()" aria-label="Toggle password">
+              <i class="ph ph-eye" id="eye-icon"></i>
+            </button>
+          </div>
+          <span class="error-msg"><i class="ph ph-warning-circle"></i> Password is required</span>
+        </div>
+
+        <div class="form-options">
+          <label class="checkbox">
+            <input type="checkbox" id="remember" />
+            <span>Remember me</span>
+          </label>
+          <a href="pages/forgot-password.html" class="forgot-link">Forgot password?</a>
+        </div>
+
+        <button type="submit" class="btn-primary">
+          Log In
+        </button>
+      </form>
+
+      <p class="login-footer">
+        Don't have an account? <a href="pages/create-account.html">Create account</a>
+      </p>
+
+    </div>
+  </div>
+
+  <script>
+    function togglePassword() {
+      const input = document.getElementById('password');
+      const icon = document.getElementById('eye-icon');
+      const isPassword = input.type === 'password';
+      input.type = isPassword ? 'text' : 'password';
+      icon.className = isPassword ? 'ph ph-eye-slash' : 'ph ph-eye';
+    }
+
+    function handleLogin(e) {
+      e.preventDefault();
+      const email = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value.trim();
+      const emailField = document.getElementById('email-field');
+      const passField = document.getElementById('password-field');
+      let valid = true;
+
+      // Simple validation demo
+      emailField.classList.remove('error');
+      passField.classList.remove('error');
+
+      if (!email.includes('@')) {
+        emailField.classList.add('error');
+        valid = false;
+      }
+      if (password.length < 6) {
+        passField.classList.add('error');
+        valid = false;
+      }
+
+      if (valid) {
+        const btn = e.target.querySelector('.btn-primary');
+        const original = btn.innerHTML;
+        btn.innerHTML = '<i class="ph ph-circle-notch" style="animation:spin 1s linear infinite"></i> Signing in...';
+        btn.disabled = true;
+        // save login for dashboard
+        localStorage.setItem('admin_user', email);
+        setTimeout(() => {
+          window.location.href = 'pages/dashboard.html';
+        }, 800);
+      }
+    }
+
+    // Add spin animation for loading
+    const style = document.createElement('style');
+    style.textContent = '@keyframes spin { to { transform: rotate(360deg); } }';
+    document.head.appendChild(style);
+  </script>
+</body>
+</html>

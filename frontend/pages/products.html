@@ -1,0 +1,784 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Products — Admin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/@phosphor-icons/web"></script>
+  <link rel="stylesheet" href="../src/assets/css/dashboard.css" />
+</head>
+<body>
+
+<div class="mobile-overlay" id="overlay" onclick="toggleSidebar()"></div>
+
+<div class="app">
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-top">
+      <div class="sidebar-logo"><img src="../merge.png" alt="Coffee Cafe logo" /></div>
+      <div class="sidebar-brand">Admin<span>Management System</span></div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <a href="dashboard.html" class="nav-item"><i class="ph ph-squares-four"></i> Dashboard</a>
+      <a href="products.html" class="nav-item active"><i class="ph ph-package"></i> Products</a>
+      <a href="sales-reports.html" class="nav-item"><i class="ph ph-chart-line"></i> Sales Reports</a>
+      <a href="../index.html" class="nav-item"><i class="ph ph-sign-out"></i> Logout</a>
+    </nav>
+
+    <div class="sidebar-bottom">
+      <span class="login-as">Login as <strong>Admin</strong></span>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <div class="main">
+    <!-- CONTENT -->
+    <div class="content">
+      <div class="page-head">
+        <div>
+          <h1 style="font-size:15px; font-weight:700;">Products</h1>
+          <p style="font-size:12px; color:var(--text-muted);">Card style — sama sa gihatag nga image</p>
+        </div>
+        <div style="display:flex; gap:8px;">
+          <button class="btn btn-primary add-product-btn" onclick="openAddProductModal()"><i class="ph ph-plus"></i> Add Product</button>
+        </div>
+      </div>
+
+      <!-- PRODUCTS GRID - card style (walay table, card style sama sa image) -->
+      <div id="productsGrid" class="products-grid"></div>
+      <div id="emptyState" class="empty-state">
+        <i class="ph ph-package" style="font-size:32px; color:var(--text-light);"></i>
+        <p style="margin-top:8px; font-size:13px; color:var(--text-muted);">No products yet. Click "Add Product" to create one.</p>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- EDIT PRODUCT MODAL -->
+<div id="editProductModal" class="modal" style="display:none;">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2>Edit product</h2>
+      <button class="modal-close" onclick="closeEditModal()"><i class="ph ph-x"></i></button>
+    </div>
+    <div class="modal-body">
+      <form id="editProductForm" onsubmit="handleEditProduct(event)">
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+          <div class="input-group">
+            <label for="editProductName">Product name</label>
+            <input type="text" id="editProductName" placeholder="Enter product name" required />
+          </div>
+          <div class="input-group">
+            <label for="editCategory">Category</label>
+            <select id="editCategory" required>
+              <option value="Hot Coffee">Hot Coffee</option>
+              <option value="Cold Coffee">Cold Coffee</option>
+              <option value="Pastries">Pastries</option>
+            </select>
+          </div>
+        </div>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+          <div class="input-group">
+            <label for="editPrice">Price (₱)</label>
+            <input type="number" id="editPrice" placeholder="Enter price" step="0.01" required />
+          </div>
+          <div class="input-group">
+            <label for="editStock">Stock</label>
+            <input type="number" id="editStock" placeholder="Enter stock quantity" required />
+          </div>
+        </div>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+          <div class="input-group">
+            <label for="editProductImage">Product image</label>
+            <div class="file-upload">
+              <input type="file" id="editProductImage" accept="image/*" style="display:none;" onchange="handleEditImageUpload(event)" />
+              <button type="button" class="file-upload-btn" onclick="document.getElementById('editProductImage').click()">
+                <i class="ph ph-upload"></i> Upload image
+              </button>
+              <div id="editImagePreview" style="margin-top:8px; display:none;">
+                <img id="editPreviewImg" style="width:100%; max-width:150px; border-radius:6px;" />
+              </div>
+            </div>
+          </div>
+          <div class="input-group">
+            <label for="editStatus">Status</label>
+            <select id="editStatus" required>
+              <option value="Available">Available</option>
+              <option value="Out of Stock">Out of Stock</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="input-group">
+          <label for="editDescription">Description</label>
+          <textarea id="editDescription" placeholder="Enter product description" style="resize:vertical; min-height:100px;"></textarea>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-ghost" onclick="closeEditModal()">Cancel</button>
+          <button type="submit" class="btn btn-primary product-save-btn">Save changes</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- ADD PRODUCT MODAL -->
+<div id="addProductModal" class="modal" style="display:none;">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2>Add product</h2>
+      <button class="modal-close" onclick="closeAddProductModal()"><i class="ph ph-x"></i></button>
+    </div>
+    <div class="modal-body">
+      <form id="addProductForm" onsubmit="handleAddProduct(event)">
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+          <div class="input-group">
+            <label for="productName">Product name</label>
+            <input type="text" id="productName" placeholder="Enter product name" required />
+          </div>
+          <div class="input-group">
+            <label for="category">Category</label>
+            <select id="category" required>
+              <option value="">Select category</option>
+              <option value="Hot Coffee">Hot Coffee</option>
+              <option value="Cold Coffee">Cold Coffee</option>
+              <option value="Pastries">Pastries</option>
+            </select>
+          </div>
+        </div>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+          <div class="input-group">
+            <label for="price">Price (₱)</label>
+            <input type="number" id="price" placeholder="Enter price" step="0.01" required />
+          </div>
+          <div class="input-group">
+            <label for="stock">Stock</label>
+            <input type="number" id="stock" placeholder="Enter stock quantity" required />
+          </div>
+        </div>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+          <div class="input-group">
+            <label for="productImage">Product image</label>
+            <div class="file-upload">
+              <input type="file" id="productImage" accept="image/*" style="display:none;" onchange="handleImageUpload(event)" />
+              <button type="button" class="file-upload-btn" onclick="document.getElementById('productImage').click()">
+                <i class="ph ph-upload"></i> Upload image
+              </button>
+              <div id="imagePreview" style="margin-top:8px; display:none;">
+                <img id="previewImg" style="width:100%; max-width:150px; border-radius:6px;" />
+              </div>
+            </div>
+          </div>
+          <div class="input-group">
+            <label for="status">Status</label>
+            <select id="status" required>
+              <option value="Available">Available</option>
+              <option value="Out of Stock">Out of Stock</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="input-group">
+          <label for="description">Description</label>
+          <textarea id="description" placeholder="Enter product description" style="resize:vertical; min-height:100px;"></textarea>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-ghost" onclick="closeAddProductModal()">Cancel</button>
+          <button type="submit" class="btn btn-primary product-save-btn">Save product</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<style>
+  .modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+  }
+  .modal-content {
+    background: white;
+    border-radius: 8px;
+    width: 90%;
+    max-width: 500px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+  .modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px;
+    border-bottom: 1px solid var(--border);
+  }
+  .modal-header h2 {
+    font-size: 18px;
+    font-weight: 600;
+    margin: 0;
+  }
+  .modal-close {
+    background: none;
+    border: none;
+    font-size: 20px;
+    cursor: pointer;
+    color: var(--text-light);
+  }
+  .modal-body {
+    padding: 20px;
+  }
+  .modal-body .input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-bottom: 16px;
+  }
+  .modal-body label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text);
+    text-transform: uppercase;
+  }
+  .modal-body input,
+  .modal-body select,
+  .modal-body textarea {
+    padding: 8px 12px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    font-family: inherit;
+    font-size: 14px;
+  }
+  .modal-footer {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+    padding: 16px 20px;
+    border-top: 1px solid var(--border);
+  }
+  .btn {
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+  }
+  .btn-primary {
+    background: var(--primary);
+    color: white;
+  }
+  .btn-ghost {
+    background: transparent;
+    color: var(--text);
+    border: 1px solid var(--border);
+  }
+  .file-upload-btn {
+    width: 100%;
+    padding: 8px 12px;
+    border: 2px dashed var(--border);
+    border-radius: 6px;
+    background: var(--surface-hover);
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    color: var(--text-muted);
+    transition: all 0.15s ease;
+  }
+  .file-upload-btn:hover {
+    background: white;
+    border-color: var(--border-focus);
+    color: var(--text);
+  }
+  .action-btn {
+    width: 32px;
+    height: 32px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: white;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    color: var(--text-muted);
+    transition: all 0.15s ease;
+  }
+  .action-btn:hover {
+    background: var(--surface-hover);
+    color: var(--text);
+  }
+  .delete-btn:hover {
+    background: #fef2f2;
+    color: var(--error);
+    border-color: var(--error);
+  }
+
+  /* ===== CARD STYLE - sama sa image (walay table) ===== */
+  .products-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+  }
+  .product-card {
+    background: #ffffff;
+    border: 1px solid #eef0f2;
+    border-radius: 8px;
+    padding: 0;
+    display: block;
+    overflow: hidden;
+    position: relative;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    transition: box-shadow 0.2s ease, transform 0.2s ease;
+    min-height: 150px;
+  }
+  .product-card:hover {
+    box-shadow: 0 10px 24px rgba(0,0,0,0.08);
+    transform: translateY(-2px);
+  }
+  .product-card-img-wrap {
+    width: 100%;
+    height: 190px;
+    border-radius: 0;
+    overflow: hidden;
+    background: #f8f9fa;
+    border: 0;
+    box-shadow: none;
+    display: grid;
+    place-items: center;
+  }
+  .product-card-img-wrap img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .product-card-img-placeholder {
+    font-size: 34px;
+    color: #cbd5e1;
+  }
+  .product-card-content {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    padding: 16px;
+  }
+  .product-card-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: #111827;
+    line-height: 1.2;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .product-card-desc {
+    font-size: 12px;
+    color: #9aa0a6;
+    font-style: italic;
+    line-height: 1.45;
+    margin-top: 6px;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    min-height: 34px;
+  }
+  .product-card-meta {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-top: 8px;
+  }
+  .meta-pill {
+    font-size: 9.5px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    padding: 3px 7px;
+    border-radius: 999px;
+    border: 1px solid #e5e7eb;
+    background: #f9fafb;
+    color: #6b7280;
+  }
+  .meta-pill.category {
+    background: #ffffff;
+  }
+  .meta-pill.stock {
+    background: #fffbeb;
+    border-color: #fde68a;
+    color: #92400e;
+  }
+  .meta-pill.stock.low {
+    background: #fef2f2;
+    border-color: #fecaca;
+    color: #991b1b;
+  }
+  .status-badge {
+    font-size: 10px;
+    font-weight: 700;
+    padding: 3px 8px;
+    border-radius: 999px;
+    border: 1px solid;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .status-badge.available {
+    background: #f0fdf4;
+    color: #15803d;
+    border-color: #bbf7d0;
+  }
+  .status-badge.outofstock {
+    background: #fef2f2;
+    color: #b91c1c;
+    border-color: #fecaca;
+  }
+  .product-card-footer {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 14px;
+    flex-wrap: wrap;
+  }
+  .price-pill {
+    background: #6f3b16;
+    color: #ffffff;
+    font-size: 12.5px;
+    font-weight: 800;
+    padding: 7px 16px;
+    border-radius: 999px;
+    min-width: 62px;
+    text-align: center;
+    box-shadow: 0 3px 8px rgba(111,59,22,0.28);
+    letter-spacing: 0.01em;
+  }
+  .cart-pill {
+    background: #a9652e;
+    color: #ffffff;
+    font-size: 10.5px;
+    font-weight: 800;
+    padding: 7px 13px;
+    border-radius: 999px;
+    border: 1px solid #8a4c20;
+    cursor: pointer;
+    letter-spacing: 0.04em;
+    box-shadow: 0 3px 8px rgba(111,59,22,0.25);
+    transition: all 0.15s ease;
+    white-space: nowrap;
+  }
+  .cart-pill:hover {
+    background: #8a4c20;
+    transform: translateY(-1px);
+  }
+  .cart-pill:active {
+    transform: translateY(0);
+  }
+  .card-actions {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    display: flex;
+    gap: 6px;
+    opacity: 0;
+    transition: opacity 0.15s ease;
+  }
+  .product-card:hover .card-actions {
+    opacity: 1;
+  }
+  .card-actions .action-btn {
+    width: 28px;
+    height: 28px;
+    font-size: 14px;
+    border-radius: 6px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+  }
+  .empty-state {
+    text-align: center;
+    padding: 48px 20px;
+    background: #ffffff;
+    border: 1px dashed #e5e7eb;
+    border-radius: 10px;
+    margin-top: 8px;
+  }
+  @media (max-width: 1100px) {
+    .products-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+  @media (max-width: 720px) {
+    .products-grid { grid-template-columns: 1fr; }
+    .product-card { padding: 0; }
+    .product-card-img-wrap { width: 100%; height: 200px; }
+    .card-actions { opacity: 1; }
+  }
+</style>
+
+<script>
+  function toggleSidebar(){
+    document.getElementById('sidebar').classList.toggle('open');
+    document.getElementById('overlay').classList.toggle('open');
+  }
+
+  // ===== CARD STYLE STATE =====
+  let products = [];
+  try {
+    products = JSON.parse(localStorage.getItem('admin_products') || '[]');
+  } catch(e){ products = []; }
+
+  let uploadedImageData = null;
+  let editUploadedImageData = null;
+  let currentEditId = null;
+
+  function saveProducts(){
+    localStorage.setItem('admin_products', JSON.stringify(products));
+  }
+
+  function escapeHtml(str){
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+  }
+
+  function getDescriptionText(p){
+    if(p.description && p.description.trim()) return escapeHtml(p.description);
+    return 'Vimplysimply dummy text of the printing and typesetting.';
+  }
+
+  function createCardHTML(p){
+    const isAvailable = p.status === 'Available';
+    const statusClass = isAvailable ? 'available' : 'outofstock';
+    const statusIcon = isAvailable ? 'ph-check-circle' : 'ph-x-circle';
+    const stockClass = parseInt(p.stock) <= 5 ? 'low' : '';
+    const imgPart = p.image
+      ? `<img src="${p.image}" alt="${escapeHtml(p.name)}" />`
+      : `<i class="ph ph-image product-card-img-placeholder"></i>`;
+    return `
+      <div class="product-card" data-id="${p.id}">
+        <div class="card-actions">
+          <button class="action-btn" onclick="openEditById('${p.id}')" title="Edit"><i class="ph ph-pencil"></i></button>
+          <button class="action-btn delete-btn" onclick="deleteById('${p.id}')" title="Delete"><i class="ph ph-trash"></i></button>
+        </div>
+        <div class="product-card-img-wrap">
+          ${imgPart}
+        </div>
+        <div class="product-card-content">
+          <div class="product-card-title" title="${escapeHtml(p.name)}">${escapeHtml(p.name)}</div>
+          <div class="product-card-desc">${getDescriptionText(p)}</div>
+          <div class="product-card-meta">
+            <span class="meta-pill category">${escapeHtml(p.category)}</span>
+            <span class="meta-pill stock ${stockClass}">Stock: ${escapeHtml(String(p.stock))}</span>
+            <span class="status-badge ${statusClass}"><i class="ph ${statusIcon}"></i> ${escapeHtml(p.status)}</span>
+          </div>
+          <div class="product-card-footer">
+            <span class="price-pill">₱${Number(p.price).toLocaleString('en-PH', {minimumFractionDigits: 0, maximumFractionDigits: 2})}</span>
+            <button class="cart-pill" onclick="openEditById('${p.id}')">EDIT</button>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  function renderProducts(){
+    const grid = document.getElementById('productsGrid');
+    const empty = document.getElementById('emptyState');
+    if(!grid || !empty) return;
+    if(products.length === 0){
+      grid.innerHTML = '';
+      grid.style.display = 'none';
+      empty.style.display = 'block';
+      return;
+    }
+    empty.style.display = 'none';
+    grid.style.display = 'grid';
+    grid.innerHTML = products.map(p => createCardHTML(p)).join('');
+  }
+
+  function openAddProductModal(){
+    document.getElementById('addProductModal').style.display = 'flex';
+  }
+
+  function closeAddProductModal(){
+    document.getElementById('addProductModal').style.display = 'none';
+  }
+
+  function handleAddProduct(e){
+    e.preventDefault();
+    const productName = document.getElementById('productName').value.trim();
+    const category = document.getElementById('category').value;
+    const price = document.getElementById('price').value;
+    const stock = document.getElementById('stock').value;
+    const status = document.getElementById('status').value;
+    const description = document.getElementById('description').value.trim();
+    const image = uploadedImageData || null;
+
+    if(!productName || !category || !price || !stock){
+      return;
+    }
+
+    const newProduct = {
+      id: Date.now().toString(36) + Math.random().toString(36).slice(2,6),
+      name: productName,
+      category: category,
+      price: parseFloat(price),
+      stock: parseInt(stock),
+      status: status,
+      image: image,
+      description: description
+    };
+
+    products.unshift(newProduct);
+    saveProducts();
+    renderProducts();
+    
+    // Reset form
+    document.getElementById('addProductForm').reset();
+    document.getElementById('imagePreview').style.display = 'none';
+    const prev = document.getElementById('previewImg');
+    if(prev) prev.src = '';
+    uploadedImageData = null;
+    closeAddProductModal();
+  }
+
+  function handleImageUpload(e){
+    const file = e.target.files[0];
+    if(file){
+      const reader = new FileReader();
+      reader.onload = function(event){
+        uploadedImageData = event.target.result;
+        document.getElementById('previewImg').src = uploadedImageData;
+        document.getElementById('imagePreview').style.display = 'block';
+      };
+      reader.readAsDataURL(file);
+    }
+  }
+
+  function handleEditImageUpload(e){
+    const file = e.target.files[0];
+    if(file){
+      const reader = new FileReader();
+      reader.onload = function(event){
+        editUploadedImageData = event.target.result;
+        document.getElementById('editPreviewImg').src = editUploadedImageData;
+        document.getElementById('editImagePreview').style.display = 'block';
+      };
+      reader.readAsDataURL(file);
+    }
+  }
+
+  window.onclick = function(event){
+    const modal = document.getElementById('addProductModal');
+    const editModal = document.getElementById('editProductModal');
+    if(event.target === modal){
+      modal.style.display = 'none';
+    }
+    if(event.target === editModal){
+      editModal.style.display = 'none';
+    }
+  }
+
+  function openEditById(id){
+    const p = products.find(x => x.id === id);
+    if(!p) return;
+    currentEditId = id;
+    document.getElementById('editProductName').value = p.name;
+    document.getElementById('editCategory').value = p.category;
+    document.getElementById('editPrice').value = p.price;
+    document.getElementById('editStock').value = p.stock;
+    document.getElementById('editStatus').value = p.status;
+    document.getElementById('editDescription').value = p.description || '';
+    editUploadedImageData = null;
+    const editPreview = document.getElementById('editImagePreview');
+    const editImg = document.getElementById('editPreviewImg');
+    if(p.image){
+      editImg.src = p.image;
+      editPreview.style.display = 'block';
+    } else {
+      editImg.src = '';
+      editPreview.style.display = 'none';
+    }
+    // clear file input
+    const fileInput = document.getElementById('editProductImage');
+    if(fileInput) fileInput.value = '';
+    openEditModal();
+  }
+
+  // backward compat for old onclicks if any
+  function editProduct(btn){ /* deprecated - keep for safety */ 
+    const card = btn.closest('.product-card');
+    if(card) openEditById(card.dataset.id);
+  }
+  function deleteProduct(btn){
+    const card = btn.closest('.product-card');
+    if(card) deleteById(card.dataset.id);
+  }
+
+  function openEditModal(){
+    document.getElementById('editProductModal').style.display = 'flex';
+  }
+
+  function closeEditModal(){
+    document.getElementById('editProductModal').style.display = 'none';
+    currentEditId = null;
+  }
+
+  function handleEditProduct(e){
+    e.preventDefault();
+    if(!currentEditId) return;
+    const idx = products.findIndex(x => x.id === currentEditId);
+    if(idx === -1) return;
+    
+    const productName = document.getElementById('editProductName').value.trim();
+    const category = document.getElementById('editCategory').value;
+    const price = document.getElementById('editPrice').value;
+    const stock = document.getElementById('editStock').value;
+    const status = document.getElementById('editStatus').value;
+    const description = document.getElementById('editDescription').value.trim();
+
+    products[idx].name = productName;
+    products[idx].category = category;
+    products[idx].price = parseFloat(price);
+    products[idx].stock = parseInt(stock);
+    products[idx].status = status;
+    products[idx].description = description;
+    if(editUploadedImageData){
+      products[idx].image = editUploadedImageData;
+    }
+    
+    saveProducts();
+    renderProducts();
+    closeEditModal();
+  }
+
+  function deleteById(id){
+    if(!confirm('Delete this product?')) return;
+    products = products.filter(p => p.id !== id);
+    saveProducts();
+    renderProducts();
+  }
+
+  // initial render
+  document.addEventListener('DOMContentLoaded', renderProducts);
+</script>
+</body>
+</html>

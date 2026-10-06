@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard — Admin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/@phosphor-icons/web"></script>
+  <link rel="stylesheet" href="../src/assets/css/dashboard.css" />
+</head>
+<body>
+
+<div class="mobile-overlay" id="overlay" onclick="toggleSidebar()"></div>
+
+<div class="app">
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-top">
+      <div class="sidebar-logo"><img src="../merge.png" alt="Coffee Cafe logo" /></div>
+      <div class="sidebar-brand">Admin<span>Management System</span></div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <a href="dashboard.html" class="nav-item active"><i class="ph ph-squares-four"></i> Dashboard</a>
+      <a href="products.html" class="nav-item"><i class="ph ph-package"></i> Products</a>
+      <a href="sales-reports.html" class="nav-item"><i class="ph ph-chart-line"></i> Sales Reports</a>
+      <a href="../index.html" class="nav-item"><i class="ph ph-sign-out"></i> Logout</a>
+    </nav>
+
+    <div class="sidebar-bottom">
+      <span class="login-as">Login as <strong>Admin</strong></span>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <div class="main">
+    <!-- CONTENT -->
+    <div class="content">
+      <div class="page-head">
+      </div>
+
+      <!-- STATS -->
+      <div class="stats">
+        <div class="stat-card">
+          <div class="stat-label">Total Revenue</div>
+          <div class="stat-value">₱ 0</div>
+          <div class="stat-change up"><i class="ph ph-trend-up"></i> 0%</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Orders</div>
+          <div class="stat-value">0</div>
+          <div class="stat-change down"><i class="ph ph-trend-down"></i> 0%</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Pending</div>
+          <div class="stat-value">0</div>
+          <div class="stat-change up"><i class="ph ph-trend-up"></i> 0%</div>
+        </div>
+      </div>
+
+      <div class="grid-2">
+      </div>
+
+      <!-- CALENDAR -->
+      <div class="card">
+        <div class="card-head">
+          <h3 id="calendarMonth"></h3>
+        </div>
+        <div class="card-body">
+          <table id="calendarTable" style="width:100%; border-collapse:collapse;">
+            <thead>
+              <tr style="border-bottom:2px solid var(--border); background:#007bff; color:white;">
+                <th style="padding:12px; text-align:center; font-size:13px; font-weight:600;">Sun</th>
+                <th style="padding:12px; text-align:center; font-size:13px; font-weight:600;">Mon</th>
+                <th style="padding:12px; text-align:center; font-size:13px; font-weight:600;">Tue</th>
+                <th style="padding:12px; text-align:center; font-size:13px; font-weight:600;">Wed</th>
+                <th style="padding:12px; text-align:center; font-size:13px; font-weight:600;">Thu</th>
+                <th style="padding:12px; text-align:center; font-size:13px; font-weight:600;">Fri</th>
+                <th style="padding:12px; text-align:center; font-size:13px; font-weight:600;">Sat</th>
+              </tr>
+            </thead>
+            <tbody id="calendarBody"></tbody>
+          </table>
+        </div>
+      </div>
+  </div>
+</div>
+
+<script>
+  function toggleSidebar(){
+    document.getElementById('sidebar').classList.toggle('open');
+    document.getElementById('overlay').classList.toggle('open');
+  }
+  const user = localStorage.getItem('admin_user');
+  if(user){
+    console.log('Logged in as', user);
+  }
+
+  let currentDate = new Date();
+
+  function renderCalendar(){
+    const year = currentDate.getFullYear();
+    const month = currentDate.getMonth();
+    const firstDay = new Date(year, month, 1);
+    const lastDay = new Date(year, month + 1, 0);
+    const prevLastDay = new Date(year, month, 0);
+    const nextDays = 7 - lastDay.getDay() - 1;
+
+    let html = '';
+    
+    // Previous month days
+    for(let x = firstDay.getDay(); x > 0; x--){
+      html += `<td style="padding:40px 12px; text-align:center; color:var(--text-light); border:1px solid var(--border); font-size:14px;">${prevLastDay.getDate() - x + 1}</td>`;
+    }
+
+    // Current month days
+    for(let day = 1; day <= lastDay.getDate(); day++){
+      const isToday = day === new Date().getDate() && month === new Date().getMonth() && year === new Date().getFullYear();
+      html += `<td style="padding:40px 12px; text-align:center; border:1px solid var(--border); font-size:14px; font-weight:600; ${isToday ? 'background:#6f3b16; color:white; border-radius:0;' : ''}">${day}</td>`;
+      if((firstDay.getDay() + day) % 7 === 0) html += '</tr><tr>';
+    }
+
+    // Next month days
+    for(let day = 1; day <= nextDays; day++){
+      html += `<td style="padding:40px 12px; text-align:center; color:var(--text-light); border:1px solid var(--border); font-size:14px;">${day}</td>`;
+    }
+
+    document.getElementById('calendarBody').innerHTML = '<tr>' + html + '</tr>';
+    document.getElementById('calendarMonth').textContent = new Date(year, month).toLocaleString('default', { month: 'long', year: 'numeric' });
+  }
+
+  document.addEventListener('DOMContentLoaded', renderCalendar);
+</script>
+</body>
+</html>

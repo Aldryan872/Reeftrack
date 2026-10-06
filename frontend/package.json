@@ -1,0 +1,14 @@
+{
+  "name": "admin-dashboard",
+  "version": "1.0.0",
+  "description": "Admin Management System",
+  "main": "index.html",
+  "scripts": {
+    "dev": "webpack serve",
+    "build": "webpack"
+  },
+  "dependencies": {
+    "@fullcalendar/core": "^6.1.10",
+    "@fullcalendar/daygrid": "^6.1.10"
+  }
+}

@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sales Reports — Admin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/@phosphor-icons/web"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+  <link rel="stylesheet" href="../src/assets/css/dashboard.css" />
+</head>
+<body>
+
+<div class="mobile-overlay" id="overlay" onclick="toggleSidebar()"></div>
+
+<div class="app">
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-top">
+      <div class="sidebar-logo"><img src="../merge.png" alt="Coffee Cafe logo" /></div>
+      <div class="sidebar-brand">Admin<span>Management System</span></div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <a href="dashboard.html" class="nav-item"><i class="ph ph-squares-four"></i> Dashboard</a>
+      <a href="products.html" class="nav-item"><i class="ph ph-package"></i> Products</a>
+      <a href="sales-reports.html" class="nav-item active"><i class="ph ph-chart-line"></i> Sales Reports</a>
+      <a href="../index.html" class="nav-item"><i class="ph ph-sign-out"></i> Logout</a>
+    </nav>
+
+    <div class="sidebar-bottom">
+      <span class="login-as">Login as <strong>Admin</strong></span>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <div class="main">
+    <!-- CONTENT -->
+    <div class="content">
+      <div class="page-head">
+      </div>
+
+      <!-- STATS -->
+      <div class="stats">
+        <div class="stat-card">
+          <div class="stat-label">Total Sales</div>
+          <div class="stat-value">₱ 0</div>
+          <div class="stat-change up"><i class="ph ph-trend-up"></i> 0%</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Total Orders</div>
+          <div class="stat-value">0</div>
+          <div class="stat-change up"><i class="ph ph-trend-up"></i> 0%</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Conversion Rate</div>
+          <div class="stat-value">0%</div>
+          <div class="stat-change down"><i class="ph ph-trend-down"></i> 0%</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Avg Order Value</div>
+          <div class="stat-value">₱ 0</div>
+          <div class="stat-change up"><i class="ph ph-trend-up"></i> 0%</div>
+        </div>
+      </div>
+
+      <div class="grid-2">
+      </div>
+
+      <!-- ORDERS TABLE -->
+      <div class="card">
+        <div class="card-head">
+          <h3>Orders</h3>
+          <div class="report-actions">
+            <label class="year-filter" for="reportYear">
+              <i class="ph ph-calendar-blank"></i>
+              <select id="reportYear" onchange="filterOrdersByYear()" aria-label="Filter orders by year"></select>
+            </label>
+            <button class="btn btn-ghost" onclick="exportCSV()" style="font-size:12px;"><i class="ph ph-file-csv"></i> Export CSV</button>
+            <button class="btn btn-primary export-pdf-btn" onclick="exportPDF()" style="font-size:12px;"><i class="ph ph-file-pdf"></i> Export PDF</button>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="table-wrap">
+            <table id="ordersTable">
+              <thead>
+                <tr>
+                  <th>Order ID</th>
+                  <th>Customer</th>
+                  <th>Date</th>
+                  <th>Amount</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody id="ordersTableBody">
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+  </div>
+</div>
+
+<script>
+  function toggleSidebar(){
+    document.getElementById('sidebar').classList.toggle('open');
+    document.getElementById('overlay').classList.toggle('open');
+  }
+  const user = localStorage.getItem('admin_user');
+  if(user){
+    console.log('Logged in as', user);
+  }
+
+  function initializeYearFilter(){
+    const select = document.getElementById('reportYear');
+    const currentYear = new Date().getFullYear();
+    select.innerHTML = '<option value="all">All years</option>';
+    for(let year = currentYear; year >= currentYear - 4; year--){
+      select.insertAdjacentHTML('beforeend', `<option value="${year}">${year}</option>`);
+    }
+  }
+
+  function filterOrdersByYear(){
+    const selectedYear = document.getElementById('reportYear').value;
+    const rows = document.querySelectorAll('#ordersTableBody tr');
+    rows.forEach(row => {
+      const dateText = row.cells[2]?.textContent.trim() || '';
+      const date = new Date(dateText);
+      const rowYear = Number.isNaN(date.getTime()) ? dateText.match(/\b\d{4}\b/)?.[0] : String(date.getFullYear());
+      row.hidden = selectedYear !== 'all' && rowYear !== selectedYear;
+    });
+  }
+
+  initializeYearFilter();
+
+  // Export functions - fixed
+  function exportCSV(){
+    const table = document.getElementById('ordersTable');
+    if(!table) return;
+    let csv = [];
+    for(let row of table.rows){
+      if(row.hidden) continue;
+      let rowData = [];
+      for(let cell of row.cells){
+        // Use innerText and escape quotes
+        let text = cell.innerText.replace(/"/g, '""');
+        rowData.push('"' + text + '"');
+      }
+      csv.push(rowData.join(','));
+    }
+    const csvContent = csv.join('\r\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'orders-' + new Date().toISOString().slice(0,10) + '.csv';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  }
+
+  function exportPDF(){
+    const table = document.getElementById('ordersTable');
+    if(!table) return;
+    const selectedYear = document.getElementById('reportYear').value;
+    const reportPeriod = selectedYear === 'all' ? 'All Years' : selectedYear;
+
+    // Try jsPDF + autotable if available
+    if(window.jspdf && window.jspdf.jsPDF && typeof window.jspdf.jsPDF.prototype.autoTable === 'function'){
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+      doc.setFontSize(14);
+      doc.text('Order Report - ' + reportPeriod, 14, 15);
+      doc.autoTable({
+        html: '#ordersTable',
+        startY: 20,
+        theme: 'grid',
+        headStyles: { fillColor: [0, 123, 255] },
+        styles: { fontSize: 10, cellPadding: 3 }
+      });
+      doc.save('orders-' + new Date().toISOString().slice(0,10) + '.pdf');
+      return;
+    }
+
+    // Fallback to jsPDF without autotable - manual text
+    if(window.jspdf && window.jspdf.jsPDF){
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+      doc.setFontSize(14);
+      doc.text('Order Report - ' + reportPeriod, 14, 15);
+      let y = 25;
+      doc.setFontSize(10);
+      const headers = Array.from(table.rows[0].cells).map(c => c.innerText);
+      doc.setFont(undefined, 'bold');
+      doc.text(headers.join(' | '), 14, y);
+      y += 7;
+      doc.setFont(undefined, 'normal');
+      for(let i = 1; i < table.rows.length; i++){
+        if(table.rows[i].hidden) continue;
+        const row = Array.from(table.rows[i].cells).map(c => c.innerText);
+        const text = row.join(' | ');
+        doc.text(text, 14, y);
+        y += 7;
+        if(y > 280){ doc.addPage(); y = 15; }
+      }
+      doc.save('orders-' + new Date().toISOString().slice(0,10) + '.pdf');
+      return;
+    }
+
+    // Last fallback: print window as PDF
+    const html = '<h2 style="font-family:Inter,sans-serif;">Order Report - ' + reportPeriod + '</h2>' + table.outerHTML;
+    const win = window.open('', '_blank');
+    if(win){
+      win.document.write('<html><head><title>Orders PDF</title><style>table{width:100%;border-collapse:collapse;font-family:Inter,sans-serif}th,td{border:1px solid #ddd;padding:8px;font-size:12px;text-align:left}th{background:#f5f5f5}</style></head><body>'+html+'</body></html>');
+      win.document.close();
+      win.focus();
+      win.print();
+    } else {
+      alert('Please allow popups to export PDF');
+    }
+  }
+
+  // No mock data - kung naa kay real API, i-fetch diri ug i-insert sa #ordersTableBody
+  // Example: fetch('/api/orders').then(r=>r.json()).then(orders=>{...})
+</script>
+</body>
+</html>
